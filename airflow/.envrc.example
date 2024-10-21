@@ -1,0 +1,10 @@
+export AIRFLOW_HOME=$PWD
+export AIRFLOW__CORE__LOAD_EXAMPLES=false
+export AIRFLOW__CORE__DEFAULT_TIMEZONE=Asia/Manila
+export AIRFLOW__CORE__DAGS_FOLDER=$PWD/src
+export AIRFLOW__WEBSERVER__SECRET_KEY=sample-secret-key # Replace with a secure key
+
+# Database
+export POSTGRES_USER="airflow"
+export POSTGRES_PASSWORD="airflow"
+export POSTGRES_DB="airflow"

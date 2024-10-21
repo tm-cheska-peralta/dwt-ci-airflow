@@ -1,0 +1,100 @@
+# Global Config
+# locals.tf, providers.tf
+region      = "us-west-2"
+tag_creator = "TM"
+profile     = "staging-account"
+environment = "staging"
+
+# VPC
+# vpc.tf
+# Note: at least 2 AZS are needed to create an RDS database
+vpc_name             = "dwh-vpc"
+vpc_cidr             = "172.31.0.0/16"
+vpc_azs              = ["us-west-2a", "us-west-2b"]
+vpc_public_subnets   = ["172.31.0.0/24"]
+vpc_private_subnets  = ["172.31.10.0/24"]
+vpc_database_subnets = ["172.31.20.0/24", "172.31.21.0/24"]
+enable_flow_log      = true
+enable_nat_gateway   = true
+
+# S3 Buckets
+# s3.tf
+bucket_name           = "dwh-s3-bucket"
+flow_logs_bucket_name = "dwh-s3-flow-logs"
+
+# Virtual Machines
+# ec2.tf
+vm_name       = "dwh-vm"
+instance_type = "t3.small"
+user_data     = <<-EOF
+    #!/bin/bash
+    sudo apt-get -y update
+    sudo apt install -y postgresql-client-common
+    sudo apt-get install -y postgresql-client
+
+    # Add Docker's official GPG key:
+    sudo apt-get install -y ca-certificates curl
+    sudo install -m 0755 -d /etc/apt/keyrings
+    sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+    # Add the repository to Apt sources:
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) stable" | \
+      sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    sudo apt-get -y update
+
+    # Install Docker
+    sudo apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    sudo usermod -a -G docker ubuntu
+
+    # Install unzip
+    sudo apt -y install unzip
+
+    # Install AWS CLI
+    cd /tmp
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    unzip awscliv2.zip
+    sudo ./aws/install
+
+    # Install CodeDeploy Agent
+    cd /tmp
+    sudo apt install ruby-full -y
+    sudo apt install wget -y
+    wget https://aws-codedeploy-us-west-2.s3.us-west-2.amazonaws.com/latest/install
+    chmod +x install
+    sudo ./install auto
+  EOF
+
+# RDS
+# rds.tf
+identifier                = "dwh-rds"
+instance_class            = "db.t3.small"
+port                      = 5432
+db_name                   = "db_name"
+db_username               = "db_user"
+db_password               = "db_password"
+engine                    = "postgres"
+engine_version            = "15.4"
+family                    = "postgres15"
+allocated_storage         = 20
+max_allocated_storage     = 100
+storage_encrypted         = false
+deletion_protection       = false
+skip_final_snapshot       = true
+final_snapshot_identifier = "dwh-rds-snapshot"
+# Cloud Build
+# CodePipeline/CodeDeploy
+# codepipeline.tf
+app_name              = "dwh-codedeploy-app"
+deployment_group_name = "dwh-codedeploy-group"
+ec2_tag_filter = {
+  key   = "Name"
+  type  = "KEY_AND_VALUE"
+  value = "dwh-vm-staging"
+}
+
+pipeline_name          = "dwh-codepipeline-pipeline"
+github_connection_name = "dwh-github-connection"
+github_repo_id         = "[TODO]"
+github_repo_branch     = "main"

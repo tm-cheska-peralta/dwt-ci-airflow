@@ -1,0 +1,51 @@
+services:
+  # Change database to cloud database during deployment
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+  webserver:
+    depends_on: 
+      - postgres
+    image: airflow-webserver:latest
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    command: bash -c "airflow db init && airflow webserver"
+    expose: 
+      - "8080"
+    ports: 
+      - "8080:8080"
+    environment:
+      AIRFLOW_HOME: /opt/airflow
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY}
+      AIRFLOW__CORE__LOAD_EXAMPLES: ${AIRFLOW__CORE__LOAD_EXAMPLES}
+      AIRFLOW__CORE__DEFAULT_TIMEZONE: ${AIRFLOW__CORE__DEFAULT_TIMEZONE}
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/src
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB}
+    volumes:
+      - db-data:/db-data
+  scheduler:
+    depends_on: 
+      - postgres
+    image: airflow-scheduler:latest
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    command: airflow scheduler
+    environment:
+      AIRFLOW_HOME: /opt/airflow
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY}
+      AIRFLOW__CORE__LOAD_EXAMPLES: ${AIRFLOW__CORE__LOAD_EXAMPLES}
+      AIRFLOW__CORE__DEFAULT_TIMEZONE: ${AIRFLOW__CORE__DEFAULT_TIMEZONE}
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/src
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB}
+
+volumes:
+  db-data:

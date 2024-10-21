@@ -1,0 +1,53 @@
+version: "3.7"
+
+services:
+  # Run Airflow webserver and scheduler
+  webserver:
+    build: 
+      context: ..
+      dockerfile: ci/Dockerfile
+    command: 
+      - /bin/bash 
+      - -c
+      - |
+        airflow db init
+        airflow users create \
+          --username ${AIRFLOW_USER_ADMIN_USERNAME} \
+          --password ${AIRFLOW_USER_ADMIN_PASSWORD} \
+          --firstname Super \
+          --lastname Admin \
+          --role Admin \
+          --email spiderman@superhero.org
+        airflow webserver
+    ports: 
+      - "8080:8080"
+    networks:
+      - airflow-network
+    environment:
+      - AIRFLOW__LOGGING__REMOTE_LOGGING=${AIRFLOW__LOGGING__REMOTE_LOGGING}
+      - AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER=${AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER}
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      - AIRFLOW_USER_ADMIN_USERNAME=${AIRFLOW_USER_ADMIN_USERNAME}
+      - AIRFLOW_USER_ADMIN_PASSWORD=${AIRFLOW_USER_ADMIN_PASSWORD}
+    env_file:
+      - airflow.env
+    restart: always
+
+  scheduler:
+    build: 
+      context: ..
+      dockerfile: ci/Dockerfile
+    command: airflow scheduler
+    networks:
+      - airflow-network
+    environment:
+        - AIRFLOW__LOGGING__REMOTE_LOGGING=${AIRFLOW__LOGGING__REMOTE_LOGGING}
+        - AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER=${AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER}
+        - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+    env_file:
+      - airflow.env
+    restart: always
+
+networks:
+  airflow-network:
+    name: airflow-network

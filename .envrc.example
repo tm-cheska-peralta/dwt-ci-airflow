@@ -1,0 +1,31 @@
+#-------------------------dwt-airflow-template-------------------------
+export AIRFLOW_HOME=$PWD
+export AIRFLOW__CORE__LOAD_EXAMPLES=false
+export AIRFLOW__CORE__DEFAULT_TIMEZONE=Asia/Manila
+export AIRFLOW__CORE__DAGS_FOLDER=$PWD/src
+export AIRFLOW__WEBSERVER__SECRET_KEY=sample-secret-key # Replace with a secure key
+
+# Database
+export POSTGRES_USER="airflow"
+export POSTGRES_PASSWORD="airflow"
+export POSTGRES_DB="airflow"
+#------------------------dwt-terraform-template------------------------(aws)
+# Staging
+export TF_STAGING_PROFILE_NAME=staging-account
+export TF_STAGING_BUCKET_NAME=dpd-de-sandbox-tf-state-staging
+export TF_STAGING_DYNAMODB_TABLE_NAME=dwh-terraform-lock-staging
+export TF_STAGING_REGION=us-west-2
+# Staging -- Advanced
+export TF_STAGING_IAM_ROLE_NAME=tf-role-staging
+export TF_STAGING_IAM_ROLE_DOC=$(cat aws-policies/tf_staging_iam_role.json)
+export TF_STAGING_IAM_POLICY_NAME=tf-policy-staging
+export TF_STAGING_IAM_POLICY_DOC=$(cat aws-policies/tf_staging_iam_policy.json)
+# Production
+export TF_PROD_PROFILE_NAME=staging-account
+export TF_PROD_BUCKET_NAME=dpd-de-sandbox-tf-state-staging
+export TF_PROD_DYNAMODB_TABLE_NAME=dwh-terraform-lock-staging
+export TF_PROD_REGION=us-west-2
+export TF_PROD_IAM_ROLE_NAME=tf-role-staging
+export TF_PROD_IAM_ROLE_DOC=$(cat aws-policies/tf_prod_iam_role.json)
+export TF_PROD_IAM_POLICY_NAME=tf-policy-staging
+export TF_PROD_IAM_POLICY_DOC=$(cat aws-policies/tf_prod_iam_policy.json)

@@ -1,0 +1,10 @@
+terraform {
+  backend "s3" {
+    encrypt        = true
+    bucket         = "{TERRAFORM_BACKEND_BUCKET_NAME}"
+    key            = "aws/terraform.tfstate"
+    region         = "{TERRAFORM_BACKEND_REGION}"
+    dynamodb_table = "{TERRAFORM_BACKEND_DYNAMODB_TABLE_NAME}"
+    profile        = "{TERRAFORM_BACKEND_PROFILE_NAME}"
+  }
+}
