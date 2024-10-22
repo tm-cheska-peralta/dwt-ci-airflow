@@ -19,6 +19,8 @@ services:
           --role Admin \
           --email spiderman@superhero.org
         airflow webserver
+    expose:
+      - "8080"
     ports: 
       - "8080:8080"
     networks:
